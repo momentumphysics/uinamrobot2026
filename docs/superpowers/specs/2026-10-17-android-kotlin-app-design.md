@@ -1,7 +1,7 @@
 # Spesifikasi Desain: Aplikasi Android Kotlin — Intellink.py
 
 - **Tanggal:** 2026-10-17
-- **Status:** Desain disetujui; menunggu review dokumen
+- **Status:** Disetujui; rencana implementasi: `docs/superpowers/plans/2026-10-17-intellink-py.md`
 - **Repo:** `uinamrobot2026`
 
 ## 1. Latar belakang
@@ -51,6 +51,8 @@ android/
 │  ├─ MainActivity.kt            # entry, keep-screen-on, lifecycle
 │  ├─ ui/DashboardScreen.kt      # layar utama (Compose)
 │  ├─ ui/Joystick.kt             # komponen joystick (Canvas + pointerInput)
+│  ├─ ui/JoystickMath.kt         # matematika joystick (fungsi murni, diuji unit)
+│  ├─ ui/Haptics.kt              # pola getaran (tersambung/putus)
 │  ├─ control/ControlViewModel.kt  # state + ticker 30 Hz
 │  ├─ control/RobotClient.kt     # OkHttp WebSocket + auto-reconnect
 │  ├─ control/ControlPacket.kt   # encoder paket (fungsi murni)
@@ -119,7 +121,7 @@ WS callback (open/close/fail) → ControlViewModel → UI status + enable/disabl
 - `INTERNET` — WebSocket.
 - `VIBRATE` — haptic.
 - `android:usesCleartextTraffic="true"` — wajib untuk `ws://` tanpa TLS.
-- minSdk 26 (Android 8.0), compileSdk/targetSdk 36.
+- minSdk 26 (Android 8.0+; perangkat Android 11 ke atas pasti bisa memasang), compileSdk 35, targetSdk 34 (sengaja bukan level terbaru demi kompatibilitas).
 - Nama app: **"Intellink.py"** (persis, termasuk akhiran `.py`); package `id.uinam.intellink`.
 
 ## 9. Pengujian
@@ -149,5 +151,5 @@ WS callback (open/close/fail) → ControlViewModel → UI status + enable/disabl
 
 - ESP32 hanya mendukung WiFi 2,4 GHz; firmware konek ke hotspot bernama "Poco X3 Pro" → app harus dijalankan di HP yang hotspot-nya dipakai ESP32. IP ESP32 dapat dilihat dari Serial Monitor 115200 saat boot.
 - HP Xiaomi/MIUI: selain USB debugging, biasanya perlu menyalakan "Install via USB" dan "USB debugging (Security settings)" agar bisa dipasang/diuji dari Android Studio.
-- Platform android-36 mungkin diunduh otomatis oleh Gradle saat build pertama (komputer ini sudah punya Android SDK + build-tools).
-- Versi Compose/AGP/Kotlin: pakai rilis stabil terbaru yang kompatibel satu sama lain.
+- Platform android-35 diunduh otomatis oleh Gradle saat build pertama (komputer ini sudah punya Android SDK + build-tools 36.0.0). Bila unduhan otomatis gagal, pasang "Android SDK Platform 35" lewat SDK Manager di Android Studio.
+- Versi dipatok (semua terverifikasi ada di repositori resmi, 17 Okt 2026): Gradle 9.8.1, AGP 9.4.1 (Kotlin bawaan 2.2.10, plugin Compose 2.2.10), Compose BOM 2025.06.01, activity-compose 1.10.1, lifecycle 2.9.2, OkHttp 4.12.0, coroutines 1.10.2, JUnit 4.13.2. Alasan: JBR di komputer ini Java 25 (butuh Gradle 9.x → AGP 9.x), dan permintaan pengguna menghindari rilis paling baru demi kompatibilitas HP Android 11.
