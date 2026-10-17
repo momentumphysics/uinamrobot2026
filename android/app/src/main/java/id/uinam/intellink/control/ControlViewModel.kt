@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 /**
@@ -32,6 +33,15 @@ class ControlViewModel(
 
     init {
         if (initialIp.isNotBlank()) connection.connect(initialIp)
+        viewModelScope.launch {
+            // Koneksi putus dapat membatalkan gesture joystick tanpa onDragCancel
+            // (pointerInput dibatalkan saat enabled berubah), sehingga nilai drive
+            // lama bisa tersangkut. Nolkan begitu tidak ONLINE agar paket pertama
+            // setelah reconnect selalu netral.
+            connection.state.collect { current ->
+                if (current != ConnectionState.ONLINE) setDrive(0, 0)
+            }
+        }
         viewModelScope.launch {
             while (true) {
                 sendCurrentValues()
@@ -84,7 +94,12 @@ class ControlViewModel(
     }
 
     private fun sendCurrentValues() {
-        if (connection.state.value != ConnectionState.ONLINE) return
+        if (connection.state.value != ConnectionState.ONLINE) {
+            // Sabuk pengaman kedua setelah kolektor di init: jangan pernah membawa
+            // sisa perintah drive lama melewati masa offline.
+            setDrive(0, 0)
+            return
+        }
         connection.send(
             ControlPacket.encode(_servo2.value, _servo3.value, _throttle.value, _steering.value)
         )

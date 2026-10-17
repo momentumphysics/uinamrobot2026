@@ -79,6 +79,14 @@ class RobotClientTest {
     }
 
     @Test
+    fun `connect dengan host tidak valid tidak crash dan tidak menghubungi jaringan`() {
+        client.connect("192.168.1.100:8080")
+
+        assertEquals(ConnectionState.OFFLINE, client.state.value)
+        assertEquals(0, server.requestCount)
+    }
+
+    @Test
     fun `connect lalu send sampai ke server`() {
         val received = CopyOnWriteArrayList<ByteArray>()
         val opened = CountDownLatch(1)

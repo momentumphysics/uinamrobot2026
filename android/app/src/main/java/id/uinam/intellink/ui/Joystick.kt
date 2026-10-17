@@ -4,6 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,6 +36,16 @@ fun Joystick(
 ) {
     val haptic = LocalHapticFeedback.current
     var knob by remember { mutableStateOf(Offset.Zero) }
+
+    // Jari bisa masih menempel saat koneksi putus: pointerInput dibatalkan karena
+    // kunci `enabled` berubah dan onDragCancel tidak dipanggil, jadi reset di sini —
+    // kenop kembali ke tengah dan perintah drive dinolkan seketika.
+    LaunchedEffect(enabled) {
+        if (!enabled) {
+            knob = Offset.Zero
+            onRelease()
+        }
+    }
 
     Canvas(
         modifier = modifier

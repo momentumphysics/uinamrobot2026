@@ -83,6 +83,25 @@ class ControlViewModelTest {
         }
 
     @Test
+    fun `drive dinolkan saat koneksi putus sehingga paket pasca-reconnect netral`() =
+        viewModelTest(initialIp = "192.168.1.100") { fake, vm ->
+            advanceTimeBy(40)
+            vm.setDrive(throttle = 200, steering = -150)
+            advanceTimeBy(40)
+            assertEquals(200, decodeInt16LE(fake.sent.last().second, 3))
+
+            fake.state.value = ConnectionState.OFFLINE
+            advanceTimeBy(40)
+
+            fake.connect("192.168.1.100")
+            advanceTimeBy(40)
+
+            val packet = fake.sent.last().second
+            assertEquals(0, decodeInt16LE(packet, 3))
+            assertEquals(0, decodeInt16LE(packet, 5))
+        }
+
+    @Test
     fun `onBackground mengirim stop lalu memutus koneksi dan berhenti mengirim`() =
         viewModelTest(initialIp = "192.168.1.100") { fake, vm ->
             advanceTimeBy(100)

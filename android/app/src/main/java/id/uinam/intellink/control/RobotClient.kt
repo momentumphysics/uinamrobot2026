@@ -33,9 +33,9 @@ class RobotClient(
 
     private var socket: WebSocket? = null
     private var reconnectJob: Job? = null
-    private var currentIp: String? = null
-    private var autoReconnect = false
-    private var generation = 0
+    @Volatile private var currentIp: String? = null
+    @Volatile private var autoReconnect = false
+    @Volatile private var generation = 0
 
     @Synchronized
     override fun connect(ip: String) {
@@ -78,7 +78,15 @@ class RobotClient(
     }
 
     private fun open(ip: String, gen: Int) {
-        val request = Request.Builder().url("ws://$ip:$port").build()
+        val request = try {
+            Request.Builder().url("ws://$ip:$port").build()
+        } catch (_: IllegalArgumentException) {
+            // Host tidak bisa diparse (mis. pengguna mengetik "192.168.1.100:8080"
+            // atau menempel "ws://..."). Jangan crash dan jangan reconnect —
+            // pengguna yang harus memperbaiki IP-nya.
+            _state.value = ConnectionState.OFFLINE
+            return
+        }
         socket = httpClient.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 if (gen != generation) return
