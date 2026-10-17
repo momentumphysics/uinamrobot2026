@@ -54,18 +54,55 @@ class ControlViewModelTest {
     }
 
     @Test
-    fun `nilai servo dan drive masuk ke paket berikutnya`() =
+    fun `laju servo menggeser sudut dan nilai drive masuk ke paket berikutnya`() =
+        viewModelTest(initialIp = "192.168.1.100") { fake, vm ->
+            advanceTimeBy(40)   // tick t=0 dan t=33
+
+            vm.setServo2Rate(1f)
+            vm.setDrive(throttle = 100, steering = -50)
+            advanceTimeBy(40)   // tick t=66
+
+            val packet = fake.sent.last().second
+            assertEquals(93, packet[1].toInt() and 0xFF)   // 90 + 2.97 per tick
+            assertEquals(100, decodeInt16LE(packet, 3))
+            assertEquals(-50, decodeInt16LE(packet, 5))
+        }
+
+    @Test
+    fun `stopAll menolkan drive dan menghentikan laju servo`() =
         viewModelTest(initialIp = "192.168.1.100") { fake, vm ->
             advanceTimeBy(40)
+            vm.setServo2Rate(1f)
+            advanceTimeBy(40)   // sudut di tick t=66: 93
+            val before = fake.sent.size
 
-            vm.setServo2(120)
-            vm.setDrive(throttle = 100, steering = -50)
+            vm.stopAll()
+
+            assertEquals(before + 1, fake.sent.size)
+            assertEquals(0, decodeInt16LE(fake.sent.last().second, 3))
+
+            advanceTimeBy(100)
+            val packet = fake.sent.last().second
+            assertEquals(93, packet[1].toInt() and 0xFF)   // sudut terakhir dipertahankan
+            assertEquals(0, decodeInt16LE(packet, 3))
+        }
+
+    @Test
+    fun `koneksi putus menghentikan laju servo dan sudut terakhir dipertahankan`() =
+        viewModelTest(initialIp = "192.168.1.100") { fake, vm ->
+            advanceTimeBy(40)
+            vm.setServo2Rate(1f)
+            advanceTimeBy(40)   // sudut di tick t=66: 93
+
+            fake.state.value = ConnectionState.OFFLINE
+            advanceTimeBy(100)
+
+            fake.connect("192.168.1.100")
             advanceTimeBy(40)
 
             val packet = fake.sent.last().second
-            assertEquals(120, packet[1].toInt() and 0xFF)
-            assertEquals(100, decodeInt16LE(packet, 3))
-            assertEquals(-50, decodeInt16LE(packet, 5))
+            assertEquals(93, packet[1].toInt() and 0xFF)
+            assertEquals(0, decodeInt16LE(packet, 3))
         }
 
     @Test

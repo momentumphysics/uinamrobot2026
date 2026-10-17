@@ -57,9 +57,10 @@ Dua cara:
 2. **Semua sekaligus:** pilih konfigurasi **"Uji unit (semua tes)"** →
    **Run ▶** (menjalankan `:app:testDebugUnitTest`).
 
-Saat ini **29 tes** hijau: encoder paket (golden frame), RobotClient
-(MockWebServer sungguhan), ViewModel (ticker/stop/background), dan
-matematika joystick. Hasil XML: `app/build/test-results/testDebugUnitTest/`.
+Saat ini **42 tes** hijau: encoder paket (golden frame), RobotClient
+(MockWebServer sungguhan), ViewModel (ticker/stop/background),
+matematika joystick, dan gerak servo (defleksi + laju). Hasil XML:
+`app/build/test-results/testDebugUnitTest/`.
 
 ## Merakit APK
 
@@ -82,10 +83,11 @@ HP dan ESP32 harus berada di jaringan yang sama (HP menjadi hotspot;
 IP ESP32 dari Serial Monitor 115200 saat boot):
 
 1. Isi IP → selesai → status **Terhubung** (hijau) dalam ~2 detik.
-2. Slider Servo 2 / Servo 3 menggerakkan servo yang benar.
+2. Lingkaran **CAPIT** (BUKA/TUTUP) dan **LENGAN** (NAIK/TURUN)
+   menggerakkan servo yang benar; lepas kenop → sudut berhenti di posisi itu.
 3. Joystick: atas = maju, bawah = mundur, kanan/kiri = belok.
 4. Lepas joystick → robot berhenti seketika; kenop kembali ke tengah.
-5. STOP saat robot jalan → berhenti seketika (+ getaran).
+5. STOP saat robot jalan → drive berhenti seketika, gerak servo batal (+ getaran).
 6. Matikan ESP32 → status merah; hidupkan → tersambung otomatis (~2–3 detik).
 7. Pindah app / kunci layar saat robot jalan → robot berhenti.
 8. Layar tidak mati selama aplikasi di depan.

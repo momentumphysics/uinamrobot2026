@@ -20,8 +20,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -42,12 +40,12 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import id.uinam.intellink.control.ConnectionState
 import id.uinam.intellink.control.ControlViewModel
-import kotlin.math.roundToInt
 
 private val ACCENT = Color(0xFF40C4FF)
 private val ONLINE = Color(0xFF00E676)
 private val OFFLINE = Color(0xFFFF1744)
 private val PENDING = Color(0xFFFFC107)
+private val HINT = Color(0xFF9E9E9E)
 
 @Composable
 fun DashboardScreen(viewModel: ControlViewModel, modifier: Modifier = Modifier) {
@@ -94,18 +92,29 @@ fun DashboardScreen(viewModel: ControlViewModel, modifier: Modifier = Modifier) 
             modifier = Modifier.fillMaxWidth(),
         )
 
-        ServoSlider(
-            label = "Servo 2 (GPIO 4)",
-            value = servo2,
-            enabled = online,
-            onValueChange = viewModel::setServo2,
-        )
-        ServoSlider(
-            label = "Servo 3 (GPIO 16)",
-            value = servo3,
-            enabled = online,
-            onValueChange = viewModel::setServo3,
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(24.dp),
+        ) {
+            ServoControl(
+                title = "CAPIT",
+                hint = "BUKA ▲ · TUTUP ▼",
+                angle = servo2,
+                enabled = online,
+                onDeflect = viewModel::setServo2Rate,
+                onRelease = { viewModel.setServo2Rate(0f) },
+                modifier = Modifier.weight(1f),
+            )
+            ServoControl(
+                title = "LENGAN",
+                hint = "NAIK ▲ · TURUN ▼",
+                angle = servo3,
+                enabled = online,
+                onDeflect = viewModel::setServo3Rate,
+                onRelease = { viewModel.setServo3Rate(0f) },
+                modifier = Modifier.weight(1f),
+            )
+        }
 
         Joystick(
             modifier = Modifier.fillMaxWidth(0.8f),
@@ -117,7 +126,7 @@ fun DashboardScreen(viewModel: ControlViewModel, modifier: Modifier = Modifier) 
         Button(
             onClick = {
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                viewModel.stopDrive()
+                viewModel.stopAll()
             },
             modifier = Modifier.fillMaxWidth().height(64.dp),
             colors = ButtonDefaults.buttonColors(containerColor = OFFLINE),
@@ -128,18 +137,25 @@ fun DashboardScreen(viewModel: ControlViewModel, modifier: Modifier = Modifier) 
 }
 
 @Composable
-private fun ServoSlider(label: String, value: Int, enabled: Boolean, onValueChange: (Int) -> Unit) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Text("$label: $value°", color = Color.LightGray, fontSize = 14.sp)
-        Slider(
-            value = value.toFloat(),
-            onValueChange = { onValueChange(it.roundToInt()) },
-            valueRange = 0f..180f,
+private fun ServoControl(
+    title: String,
+    hint: String,
+    angle: Int,
+    enabled: Boolean,
+    onDeflect: (Float) -> Unit,
+    onRelease: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        ServoStick(
+            modifier = Modifier.fillMaxWidth(),
             enabled = enabled,
-            colors = SliderDefaults.colors(
-                thumbColor = ONLINE,
-                activeTrackColor = ONLINE,
-            ),
+            onDeflect = onDeflect,
+            onRelease = onRelease,
         )
+        Spacer(Modifier.height(8.dp))
+        Text(title, color = ACCENT, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        Text(hint, color = HINT, fontSize = 12.sp)
+        Text("$angle°", color = Color.LightGray, fontSize = 14.sp)
     }
 }

@@ -7,10 +7,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
+
+private const val TICK_MS = 33L
 
 /**
  * State kontrol + ticker 33 ms (~30 Hz, sekaligus heartbeat failsafe ESP32).
  * Ticker selalu berjalan; paket hanya dikirim saat ONLINE.
+ *
+ * Sudut servo disimpan halus (float) supaya laju kecil tetap terakumulasi antar
+ * tick; laju kenop = -1..+1 dengan dorong atas positif (buka/naik).
  */
 class ControlViewModel(
     private val connection: RobotConnection,
@@ -31,31 +37,39 @@ class ControlViewModel(
     val throttle: StateFlow<Int> = _throttle
     val steering: StateFlow<Int> = _steering
 
+    private var servo2Angle = 90f
+    private var servo3Angle = 90f
+    private var servo2Rate = 0f
+    private var servo3Rate = 0f
+
     init {
         if (initialIp.isNotBlank()) connection.connect(initialIp)
         viewModelScope.launch {
-            // Koneksi putus dapat membatalkan gesture joystick tanpa onDragCancel
+            // Koneksi putus dapat membatalkan gesture tanpa onDragCancel
             // (pointerInput dibatalkan saat enabled berubah), sehingga nilai drive
-            // lama bisa tersangkut. Nolkan begitu tidak ONLINE agar paket pertama
-            // setelah reconnect selalu netral.
+            // dan laju servo lama bisa tersangkut. Nolkan begitu tidak ONLINE agar
+            // paket pertama setelah reconnect selalu netral.
             connection.state.collect { current ->
-                if (current != ConnectionState.ONLINE) setDrive(0, 0)
+                if (current != ConnectionState.ONLINE) clearCommands()
             }
         }
         viewModelScope.launch {
             while (true) {
+                integrateServos()
                 sendCurrentValues()
-                delay(33)
+                delay(TICK_MS)
             }
         }
     }
 
-    fun setServo2(value: Int) {
-        _servo2.value = value.coerceIn(0, 180)
+    /** Laju servo 2 (capit): -1..+1, dorong kenop atas = positif (buka). */
+    fun setServo2Rate(rate: Float) {
+        servo2Rate = sanitizeRate(rate)
     }
 
-    fun setServo3(value: Int) {
-        _servo3.value = value.coerceIn(0, 180)
+    /** Laju servo 3 (lengan): -1..+1, dorong kenop atas = positif (naik). */
+    fun setServo3Rate(rate: Float) {
+        servo3Rate = sanitizeRate(rate)
     }
 
     fun setDrive(throttle: Int, steering: Int) {
@@ -63,7 +77,13 @@ class ControlViewModel(
         _steering.value = steering.coerceIn(-255, 255)
     }
 
-    /** Tombol STOP dan lepas joystick: nol + kirim seketika (tidak menunggu tick). */
+    /** Tombol STOP: hentikan drive dan laju servo, kirim seketika (tidak menunggu tick). */
+    fun stopAll() {
+        clearCommands()
+        sendCurrentValues()
+    }
+
+    /** Lepas joystick drive: nol + kirim seketika (tidak menunggu tick). */
     fun stopDrive() {
         setDrive(0, 0)
         sendCurrentValues()
@@ -88,16 +108,32 @@ class ControlViewModel(
     }
 
     fun onBackground() {
-        setDrive(0, 0)
+        clearCommands()
         sendCurrentValues()
         connection.disconnect()
     }
 
+    private fun integrateServos() {
+        servo2Angle = advanceServoAngle(servo2Angle, servo2Rate, TICK_MS)
+        servo3Angle = advanceServoAngle(servo3Angle, servo3Rate, TICK_MS)
+        _servo2.value = servo2Angle.roundToInt()
+        _servo3.value = servo3Angle.roundToInt()
+    }
+
+    private fun clearCommands() {
+        setDrive(0, 0)
+        servo2Rate = 0f
+        servo3Rate = 0f
+    }
+
+    private fun sanitizeRate(rate: Float): Float =
+        if (rate.isNaN()) 0f else rate.coerceIn(-1f, 1f)
+
     private fun sendCurrentValues() {
         if (connection.state.value != ConnectionState.ONLINE) {
             // Sabuk pengaman kedua setelah kolektor di init: jangan pernah membawa
-            // sisa perintah drive lama melewati masa offline.
-            setDrive(0, 0)
+            // sisa perintah drive/servo lama melewati masa offline.
+            clearCommands()
             return
         }
         connection.send(
