@@ -1,0 +1,3 @@
+# Metadata IDE (Android Studio / IntelliJ) — jangan di-commit
+.idea/
+*.iml
