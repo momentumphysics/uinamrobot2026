@@ -1,4 +1,4 @@
-# Spesifikasi Desain: Aplikasi Android Kotlin — UINAM Robot 2026
+# Spesifikasi Desain: Aplikasi Android Kotlin — Intellink.py
 
 - **Tanggal:** 2026-10-17
 - **Status:** Desain disetujui; menunggu review dokumen
@@ -47,7 +47,7 @@ Struktur folder project Android:
 
 ```
 android/
-├─ app/src/main/java/id/uinam/robot2026/
+├─ app/src/main/java/id/uinam/intellink/
 │  ├─ MainActivity.kt            # entry, keep-screen-on, lifecycle
 │  ├─ ui/DashboardScreen.kt      # layar utama (Compose)
 │  ├─ ui/Joystick.kt             # komponen joystick (Canvas + pointerInput)
@@ -120,7 +120,7 @@ WS callback (open/close/fail) → ControlViewModel → UI status + enable/disabl
 - `VIBRATE` — haptic.
 - `android:usesCleartextTraffic="true"` — wajib untuk `ws://` tanpa TLS.
 - minSdk 26 (Android 8.0), compileSdk/targetSdk 36.
-- Nama app: "UINAM Robot 2026"; package `id.uinam.robot2026`.
+- Nama app: **"Intellink.py"** (persis, termasuk akhiran `.py`); package `id.uinam.intellink`.
 
 ## 9. Pengujian
 
