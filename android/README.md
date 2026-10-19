@@ -6,8 +6,8 @@ yang sama persis dengan `controller.html`. Firmware `vehicle_control_ws.ino`
 dan `controller.html` tidak diubah.
 
 Tampilan dikunci **landscape**: slider vertikal kiri = maju/mundur,
-slider vertikal kanan = belok kiri/kanan, dua lingkaran servo
-(CAPIT/LENGAN) di tengah, dan tombol STOP di bawah.
+slider horizontal kanan = belok kiri/kanan (kanan = belok kanan), dua
+lingkaran servo (CAPIT/LENGAN) di tengah, dan tombol STOP kecil di bawah.
 
 ## Prasyarat
 
@@ -90,7 +90,8 @@ IP ESP32 dari Serial Monitor 115200 saat boot):
 2. Lingkaran **CAPIT** (BUKA/TUTUP) dan **LENGAN** (NAIK/TURUN)
    menggerakkan servo yang benar; lepas kenop → sudut berhenti di posisi itu.
 3. Slider vertikal kiri (**MAJU / MUNDUR**): atas = maju, bawah = mundur.
-4. Slider vertikal kanan (**KIRI / KANAN**): atas = belok kanan, bawah = belok kiri.
+4. Slider horizontal kanan (**KIRI / KANAN**): geser ke kanan = belok kanan,
+   ke kiri = belok kiri.
 5. Lepas slider → nilainya kembali ke 0 seketika (robot berhenti); slider lain
    tidak terpengaruh.
 6. STOP saat robot jalan → drive berhenti seketika, gerak servo batal (+ getaran).

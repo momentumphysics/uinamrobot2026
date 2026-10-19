@@ -1,6 +1,7 @@
 package id.uinam.intellink.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -109,13 +110,14 @@ fun DashboardScreen(viewModel: ControlViewModel, modifier: Modifier = Modifier) 
                 hint = "MAJU ▲ · ▼ MUNDUR",
                 value = throttle,
                 enabled = online,
+                orientation = Orientation.Vertical,
                 onValueChange = viewModel::setThrottle,
                 onRelease = viewModel::releaseThrottle,
                 modifier = Modifier.weight(1f),
             )
 
             Row(
-                modifier = Modifier.weight(1.2f),
+                modifier = Modifier.weight(1.15f),
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -141,12 +143,13 @@ fun DashboardScreen(viewModel: ControlViewModel, modifier: Modifier = Modifier) 
 
             DriveSliderColumn(
                 title = "KIRI / KANAN",
-                hint = "KANAN ▲ · ▼ KIRI",
+                hint = "◀ KIRI · KANAN ▶",
                 value = steering,
                 enabled = online,
+                orientation = Orientation.Horizontal,
                 onValueChange = viewModel::setSteering,
                 onRelease = viewModel::releaseSteering,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1.35f),
             )
         }
 
@@ -156,11 +159,12 @@ fun DashboardScreen(viewModel: ControlViewModel, modifier: Modifier = Modifier) 
                 viewModel.stopAll()
             },
             modifier = Modifier
-                .fillMaxWidth()
-                .height(46.dp),
+                .align(Alignment.CenterHorizontally)
+                .width(180.dp)
+                .height(40.dp),
             colors = ButtonDefaults.buttonColors(containerColor = OFFLINE),
         ) {
-            Text("STOP", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text("STOP", fontSize = 16.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -171,6 +175,7 @@ private fun DriveSliderColumn(
     hint: String,
     value: Int,
     enabled: Boolean,
+    orientation: Orientation,
     onValueChange: (Int) -> Unit,
     onRelease: () -> Unit,
     modifier: Modifier = Modifier,
@@ -187,14 +192,21 @@ private fun DriveSliderColumn(
             fontSize = 26.sp,
             fontWeight = FontWeight.Bold,
         )
-        VerticalSlider(
+        DriveSlider(
             value = value,
             enabled = enabled,
+            orientation = orientation,
             onValueChange = onValueChange,
             onRelease = onRelease,
-            modifier = Modifier
-                .weight(1f)
-                .padding(vertical = 6.dp),
+            modifier = if (orientation == Orientation.Vertical) {
+                Modifier
+                    .weight(1f)
+                    .padding(vertical = 6.dp)
+            } else {
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp, vertical = 6.dp)
+            },
         )
         Text(hint, color = HINT, fontSize = 11.sp)
     }
