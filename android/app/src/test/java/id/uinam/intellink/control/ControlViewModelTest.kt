@@ -59,7 +59,8 @@ class ControlViewModelTest {
             advanceTimeBy(40)   // tick t=0 dan t=33
 
             vm.setServo2Rate(1f)
-            vm.setDrive(throttle = 100, steering = -50)
+            vm.setThrottle(100)
+            vm.setSteering(-50)
             advanceTimeBy(40)   // tick t=66
 
             val packet = fake.sent.last().second
@@ -106,24 +107,58 @@ class ControlViewModelTest {
         }
 
     @Test
-    fun `stopDrive mengirim nol seketika tanpa menunggu tick`() =
+    fun `releaseThrottle mengirim throttle nol seketika tanpa mengubah steering`() =
         viewModelTest(initialIp = "192.168.1.100") { fake, vm ->
-            advanceTimeBy(100)
+            advanceTimeBy(40)
+            vm.setThrottle(180)
+            vm.setSteering(-90)
+            advanceTimeBy(40)
             val before = fake.sent.size
 
-            vm.stopDrive()
+            vm.releaseThrottle()
 
             assertEquals(before + 1, fake.sent.size)
             val packet = fake.sent.last().second
             assertEquals(0, decodeInt16LE(packet, 3))
+            assertEquals(-90, decodeInt16LE(packet, 5))
+        }
+
+    @Test
+    fun `releaseSteering mengirim steering nol seketika tanpa mengubah throttle`() =
+        viewModelTest(initialIp = "192.168.1.100") { fake, vm ->
+            advanceTimeBy(40)
+            vm.setThrottle(180)
+            vm.setSteering(-90)
+            advanceTimeBy(40)
+            val before = fake.sent.size
+
+            vm.releaseSteering()
+
+            assertEquals(before + 1, fake.sent.size)
+            val packet = fake.sent.last().second
+            assertEquals(180, decodeInt16LE(packet, 3))
             assertEquals(0, decodeInt16LE(packet, 5))
+        }
+
+    @Test
+    fun `setThrottle dan setSteering membatasi rentang -255 sampai 255`() =
+        viewModelTest(initialIp = "192.168.1.100") { fake, vm ->
+            advanceTimeBy(40)
+            vm.setThrottle(999)
+            vm.setSteering(-999)
+            advanceTimeBy(40)
+
+            val packet = fake.sent.last().second
+            assertEquals(255, decodeInt16LE(packet, 3))
+            assertEquals(-255, decodeInt16LE(packet, 5))
         }
 
     @Test
     fun `drive dinolkan saat koneksi putus sehingga paket pasca-reconnect netral`() =
         viewModelTest(initialIp = "192.168.1.100") { fake, vm ->
             advanceTimeBy(40)
-            vm.setDrive(throttle = 200, steering = -150)
+            vm.setThrottle(200)
+            vm.setSteering(-150)
             advanceTimeBy(40)
             assertEquals(200, decodeInt16LE(fake.sent.last().second, 3))
 

@@ -5,6 +5,10 @@ menyambung ke `ws://<ip>:81` dan mengirim paket kontrol 8 byte — protokol
 yang sama persis dengan `controller.html`. Firmware `vehicle_control_ws.ino`
 dan `controller.html` tidak diubah.
 
+Tampilan dikunci **landscape**: slider vertikal kiri = maju/mundur,
+slider vertikal kanan = belok kiri/kanan, dua lingkaran servo
+(CAPIT/LENGAN) di tengah, dan tombol STOP di bawah.
+
 ## Prasyarat
 
 - **Android Studio** (versi mesin pengembang: 2026.2.1).
@@ -57,9 +61,9 @@ Dua cara:
 2. **Semua sekaligus:** pilih konfigurasi **"Uji unit (semua tes)"** →
    **Run ▶** (menjalankan `:app:testDebugUnitTest`).
 
-Saat ini **42 tes** hijau: encoder paket (golden frame), RobotClient
-(MockWebServer sungguhan), ViewModel (ticker/stop/background),
-matematika joystick, dan gerak servo (defleksi + laju). Hasil XML:
+Saat ini **35 tes** hijau: encoder paket (golden frame), RobotClient
+(MockWebServer sungguhan), ViewModel (ticker/stop/background + slider drive),
+matematika servo, dan gerak servo (defleksi + laju). Hasil XML:
 `app/build/test-results/testDebugUnitTest/`.
 
 ## Merakit APK
@@ -85,12 +89,14 @@ IP ESP32 dari Serial Monitor 115200 saat boot):
 1. Isi IP → selesai → status **Terhubung** (hijau) dalam ~2 detik.
 2. Lingkaran **CAPIT** (BUKA/TUTUP) dan **LENGAN** (NAIK/TURUN)
    menggerakkan servo yang benar; lepas kenop → sudut berhenti di posisi itu.
-3. Joystick: atas = maju, bawah = mundur, kanan/kiri = belok.
-4. Lepas joystick → robot berhenti seketika; kenop kembali ke tengah.
-5. STOP saat robot jalan → drive berhenti seketika, gerak servo batal (+ getaran).
-6. Matikan ESP32 → status merah; hidupkan → tersambung otomatis (~2–3 detik).
-7. Pindah app / kunci layar saat robot jalan → robot berhenti.
-8. Layar tidak mati selama aplikasi di depan.
-9. Jauhkan HP (sinyal lemah) → failsafe firmware menghentikan robot;
-   setelah sinyal kembali robot **tidak melompat** (perintah drive
-   dinolkan otomatis saat koneksi putus).
+3. Slider vertikal kiri (**MAJU / MUNDUR**): atas = maju, bawah = mundur.
+4. Slider vertikal kanan (**KIRI / KANAN**): atas = belok kanan, bawah = belok kiri.
+5. Lepas slider → nilainya kembali ke 0 seketika (robot berhenti); slider lain
+   tidak terpengaruh.
+6. STOP saat robot jalan → drive berhenti seketika, gerak servo batal (+ getaran).
+7. Matikan ESP32 → status merah; hidupkan → tersambung otomatis (~2–3 detik).
+8. Pindah app / kunci layar saat robot jalan → robot berhenti.
+9. Layar tidak mati selama aplikasi di depan.
+10. Jauhkan HP (sinyal lemah) → failsafe firmware menghentikan robot;
+    setelah sinyal kembali robot **tidak melompat** (perintah drive
+    dinolkan otomatis saat koneksi putus).

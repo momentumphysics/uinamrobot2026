@@ -72,20 +72,31 @@ class ControlViewModel(
         servo3Rate = sanitizeRate(rate)
     }
 
-    fun setDrive(throttle: Int, steering: Int) {
-        _throttle.value = throttle.coerceIn(-255, 255)
-        _steering.value = steering.coerceIn(-255, 255)
+    /** Nilai throttle -255..255 (positif = maju); dipakai slider vertikal kiri. */
+    fun setThrottle(value: Int) {
+        _throttle.value = value.coerceIn(-255, 255)
+    }
+
+    /** Nilai steering -255..255 (positif = kanan); dipakai slider vertikal kanan. */
+    fun setSteering(value: Int) {
+        _steering.value = value.coerceIn(-255, 255)
+    }
+
+    /** Lepas slider throttle: kembali ke 0 dan kirim seketika (pegas seperti HTML). */
+    fun releaseThrottle() {
+        setThrottle(0)
+        sendCurrentValues()
+    }
+
+    /** Lepas slider steering: kembali ke 0 dan kirim seketika (pegas seperti HTML). */
+    fun releaseSteering() {
+        setSteering(0)
+        sendCurrentValues()
     }
 
     /** Tombol STOP: hentikan drive dan laju servo, kirim seketika (tidak menunggu tick). */
     fun stopAll() {
         clearCommands()
-        sendCurrentValues()
-    }
-
-    /** Lepas joystick drive: nol + kirim seketika (tidak menunggu tick). */
-    fun stopDrive() {
-        setDrive(0, 0)
         sendCurrentValues()
     }
 
@@ -121,7 +132,8 @@ class ControlViewModel(
     }
 
     private fun clearCommands() {
-        setDrive(0, 0)
+        setThrottle(0)
+        setSteering(0)
         servo2Rate = 0f
         servo3Rate = 0f
     }
